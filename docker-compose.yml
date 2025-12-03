@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # 1. UI SZOLGÁLTATÁS
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  # 2. API SZOLGÁLTATÁS
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=marketdb
+      - DB_USER=postgres
+      - DB_PASSWORD=secret
+      # AWS kulcsokat ide írd be, ha ki akarod próbálni az S3-at lokálisan!
+      # Ha üresen hagyod, a kód "dummy" URL-t generál, de nem száll el.
+      - AWS_ACCESS_KEY_ID=
+      - AWS_SECRET_ACCESS_KEY=
+      - AWS_BUCKET_NAME=te-bucket-neved
+      - AWS_REGION=eu-central-1
+    depends_on:
+      - db
+
+  # 3. ADATBÁZIS (AWS-ben ezt majd az RDS váltja ki!)
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: marketdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>CloudMarket</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 5px; display: flex; gap: 15px; }
+        .card img { max-width: 150px; height: auto; object-fit: cover; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 8px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>☁️ CloudMarket</h1>
+
+    <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <h3>Új hirdetés feladása</h3>
+        <form id="adForm">
+            <div class="form-group">
+                <label>Termék neve</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label>Ár (Ft)</label>
+                <input type="number" id="price" required>
+            </div>
+            <div class="form-group">
+                <label>Leírás</label>
+                <textarea id="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Kép feltöltése</label>
+                <input type="file" id="file" accept="image/*" required>
+            </div>
+            <button type="submit">Hirdetés feladása</button>
+        </form>
+    </div>
+
+    <h3>Elérhető termékek</h3>
+    <div id="productList">Loading...</div>
+
+    <script>
+        // AWS-ben majd az Load Balancer DNS címe kell ide,
+        // lokálisan pedig a localhost:8000
+        const API_URL = 'http://localhost:8000'; 
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                const products = await response.json();
+                const container = document.getElementById('productList');
+                container.innerHTML = '';
+                
+                products.forEach(p => {
+                    const html = `
+                        <div class="card">
+                            <img src="${p.image_url}" alt="${p.name}">
+                            <div>
+                                <h4>${p.name} - ${p.price} Ft</h4>
+                                <p>${p.description}</p>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        document.getElementById('adForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('price', document.getElementById('price').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('file', document.getElementById('file').files[0]);
+
+            await fetch(`${API_URL}/products`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            alert('Sikeres feltöltés!');
+            document.getElementById('adForm').reset();
+            loadProducts();
+        });
+
+        loadProducts();
+    </script>
+</body>
+</html>
