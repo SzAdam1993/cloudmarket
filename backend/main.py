@@ -91,3 +91,30 @@ async def create_product(
     db.close()
 
     return new_product
+# ... (ez a kód mehet a fájl végére)
+
+@app.delete("/products/{product_id}")
+def delete_product(product_id: int):
+    db = SessionLocal()
+    product = db.query(Product).filter(Product.id == product_id).first()
+    
+    if not product:
+        db.close()
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # 1. Törlés az S3-ról 
+    # A linkből (pl. https://bucket.s3.../kep.jpg) ki kell szedni a fájl nevét
+    if product.image_url and "amazonaws.com" in product.image_url:
+        try:
+            file_name = product.image_url.split("/")[-1]
+            s3_client.delete_object(Bucket=AWS_BUCKET, Key=file_name)
+            print(f"Deleted from S3: {file_name}")
+        except Exception as e:
+            print(f"S3 delete error: {e}")
+
+    # 2. Törlés az adatbázisból
+    db.delete(product)
+    db.commit()
+    db.close()
+    
+    return {"message": "Product deleted successfully"}

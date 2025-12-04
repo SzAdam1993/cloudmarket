@@ -43,8 +43,6 @@
     <div id="productList">Loading...</div>
 
     <script>
-        // AWS-ben majd az Load Balancer DNS címe kell ide,
-        // lokálisan pedig a localhost:8000
         const API_URL = 'http://localhost:8000'; 
 
         async function loadProducts() {
@@ -58,15 +56,27 @@
                     const html = `
                         <div class="card">
                             <img src="${p.image_url}" alt="${p.name}">
-                            <div>
+                            <div style="flex-grow: 1;">
                                 <h4>${p.name} - ${p.price} Ft</h4>
                                 <p>${p.description}</p>
                             </div>
+                            <button onclick="deleteProduct(${p.id})" style="background: red; align-self: center;">Törlés</button>
                         </div>
                     `;
                     container.innerHTML += html;
                 });
             } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function deleteProduct(id) {
+            if(!confirm("Biztosan törölni szeretnéd?")) return;
+            try {
+                await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
+                loadProducts(); 
+            } catch (e) {
+                alert("Hiba történt a törléskor!");
                 console.error(e);
             }
         }
