@@ -43,7 +43,8 @@
     <div id="productList">Loading...</div>
 
     <script>
-        const API_URL = 'http://18.195.234.28:8000'; 
+        
+        const API_URL = 'http://' + window.location.hostname + ':8000';
 
         async function loadProducts() {
             try {
